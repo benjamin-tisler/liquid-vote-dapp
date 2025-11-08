@@ -1,0 +1,147 @@
+{
+	"compiler": {
+		"version": "0.8.31-pre.1+commit.b59566f6"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "fromNode",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "toNode",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "weight",
+						"type": "uint256"
+					}
+				],
+				"name": "addEdge",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "success",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "proposalId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "conclusion",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "voteWeight",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "timestamp",
+						"type": "uint256"
+					}
+				],
+				"name": "addNode",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "nodeId",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "nodeId",
+						"type": "uint256"
+					}
+				],
+				"name": "getNodePriority",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "priority",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "user",
+						"type": "address"
+					}
+				],
+				"name": "isModerator",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/IDecisionGraph.sol": "IDecisionGraph"
+		},
+		"evmVersion": "prague",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/IDecisionGraph.sol": {
+			"keccak256": "0xe7b7b06205dfc7a7cbc476d4350b237bdd2abbff915f59b011c575022f6bf76e",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://150486a7aa296a2f3e88c50eb51b5d53c30ac47e6a3ae061cbbb7c6644604015",
+				"dweb:/ipfs/QmdpbLvPcAJgNSQTDSmYGczktoiYmHSFUDjw5zrJkQPBaH"
+			]
+		}
+	},
+	"version": 1
+}

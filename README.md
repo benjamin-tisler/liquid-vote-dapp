@@ -1,112 +1,157 @@
-# **ZASNOVA DISTRIBUIRANE APLIKACIJE ZA MREŽNO ODLOČANJE: LIQUID VOTE DAPP**
+# **RAZŠIRJENA ZASNOVA LIQUID-VOTE-DAPP: GRAF ODLČITEV IN INTEGRACIJA Z RS REGISTROM**
 
-> **"Demokracija ni statična – je tekoča. Blockchain jo naredi nespremenljivo."**
+> **"Odločitve niso statične artefakte – so živi graf, ki ga skupnost dinamično ureja."**
 
-Ta zasnova temelji na konceptu **liquid democracy** (tekoče demokracije), ki združuje direktno glasovanje z delegacijo glasov, implementirano na blockchainu. 
-Aplikacija je distribuirana (DApp), podobna Bitcoin klientu: P2P mreža, kjer vsako vozlišče (node) validira transakcije (glasove) in gradi verigo blokov (odločitev). 
-Vsak posameznik ima **en unikaten glas**, vendar z **dinamično težo** na podlagi zaupanja in delegacij. Začetni parametri so enaki (teža = 1), dokler skupnost posamezniku ne dodeli večje teže prek delegacij ali zaupanja.
+Hvala za razširitev ideje! V tej zasnovi **pozabimo na anonimnost** (vse identitete so verificirane prek eID), dodamo **usmerjeni graf sprejetih odločitev** z utežmi/prioritetami, ki ga urejajo **kompetentni/izvoljeni moderatorji** prek **preurejevalnih odločitev** (meta-glasovanj). Prav tako preverim **integracijo z Centralnim registrom prebivalstva (CRP) RS** in **NFC uvoz osebnih podatkov** prek digitalne osebne izkaznice (e-izkaznice). Zasnovano je za **smartphone app** (Android/iOS), ki deluje kot distribuirani klient.
 
-Inspiracija iz obstoječih sistemov: Liquid democracy v DPoS blockchainih, delegated voting v DAOs in blockchain-based electronic voting z delegacijo. Uporabljam proof-of-stake (PoS) za konsenz, podobno Tezosu, z liquid delegation za uteži.
+Integracija temelji na realnih možnostih: Slovenija podpira **NFC branje e-izkaznice** za avtentikacijo in pridobivanje osnovnih podatkov (ime, priimek, stalno prebivališče), zlasti prek uradnih app-ov kot eOsebna. CRP omogoča **povezave prek API-jev ali informacijskih sistemov**, a zahteva odobritev (npr. prek eID avtentikacije).
 
-## **I. ARHITEKTURA SISTEMA (PODOBNO BTC KLIENTU)**
+---
 
-Aplikacija deluje kot **decentralizirana P2P mreža**:
-- **Vozlišča (Nodes)**: Vsak uporabnik zažene lokalnega klienta (kot BTC wallet), ki se poveže v mrežo.
-- **Blockchain**: Veriga blokov hrani vse transakcije (glasove, delegacije) in odločitve (bloke z izidi).
-- **Smart Contracts**: Za avtomatizacijo (npr. Solidity na Ethereum-compatible verigi, ali custom PoS chain kot v DPoS sistemih).
-- **Sybil Resistance**: En glas na osebo – uporabi proof-of-personhood (npr. biometrični hash ali zero-knowledge proof za unikaten ID, podobno Worldcoin).
+## **I. RAZŠIRITEV: USMERJEN GRAF SPREJETIH ODLČITEV**
 
-| Komponenta | Opis | Tehnologija |
-|------------|------|-------------|
-| **Klient** | Lokalna app za glasovanje, delegacijo in validacijo. | Electron/React za frontend, Web3.js za backend. |
-| **Mreža** | P2P za širjenje transakcij. | Libp2p ali custom gossip protocol (kot BTC). |
-| **Konsenz** | PoS z liquid delegation – delegirani glasovi povečajo staking težo validatorjev. | Cosmos SDK ali Substrate (Polkadot). |
-| **Shranjevanje** | IPFS za off-chain podatke (npr. predlogi), blockchain za ključne tx. | Ethereum L2 (npr. Optimism) za skalabilnost. |
+Sprejete odločitve niso ločene – tvorijo **usmerjeni graf (directed graph)**, kjer:
+- **Povezave** kažejo odvisnosti (npr. "Odločitev A vpliva na B" → lok A → B).
+- **Uteži/prioriteti** so dinamične (npr. glede na utež glasovanja, časovno relevanco ali zaupanje).
+- **Urejanje grafa**: Ne vsakdo – samo **kompetentni/izvoljeni moderatorji** (izbrani prek ad-hoc glasovanj v dApp-u). Spremembe (dodajanje/izbrišitev povezav, sprememba uteži) so **preurejevalne odločitve** (meta-predlogi), ki jih forum potrdi.
 
-## **II. IDENTITETA IN ZAČETNI PARAMETRI**
+### **Struktura grafa**
+- **Vozlišča**: Vsaka sprejeta odločitev (iz "lista" v blockchainu) kot node z atributi:
+  - ID (block height),
+  - Izhod (sklep),
+  - Datum,
+  - Statistične (utež glasovanja, % sodelujočih).
+- **Robi**: Usmerjeni lokovi z utežmi (0–1, kjer 1 = močna odvisnost).
+- **Utež vozlišča**: `W = (utež glasovanja × 0.4) + (število citiranj × 0.3) + (časovna svežina × 0.3)`.
 
-- **Registracija**: Vsak uporabnik generira unikaten ključ (ECDSA, kot v BTC) in dokaže "človeškost" (npr. prek oracle za biometrijo ali social proof).
-- **Začetni parametri**: Teža glasa = 1, brez delegacij. Vsak ima "staking pool" za svoj glas (podobno PoS).
-- **Sprememba teže**: 
-  - **Zaupanje**: Drugi glasujejo za "zaupanja vrednega" – vsak +1 zaupanja poveča težo za 0.1 (do max 10).
-  - **Delegacija**: Uporabnik A delegira glas B-ju – B glasuje z težo A + B. Delegacija je revokabilna kadarkoli.
-    - **Specifična**: Samo za eno zadevo (npr. "delegiram za predlog #123").
-    - **Splošna**: Do preklica (npr. "delegiram B-ju za vse okoljske teme").
+| Element grafa | Opis | Primer |
+|---------------|------|--------|
+| **Vozlišče** | Sprejeta odločitev z utežjo | Node #123: "Uvedba lokalne valute" (utež 0.85) |
+| **Rob (lok)** | Odvisnost + utež | #123 → #456 (utež 0.7: "nova valuta vpliva na davke") |
+| **Prioritizacija** | Topološko urejanje + PageRank-like algoritem | Visoko prioritetne: Starejše, močneje citirane odločitve |
+| **Urejanje** | Meta-glasovanje za spremembe | Forum izbere 5 moderatorjev; oni predlagajo, skupnost potrdi |
 
-> **Primer**: Uporabnik A (teža 1) delegira B-ju (teža 2) → B glasuje z težo 3.
+### **Proces urejanja grafa**
+1. **Predlog spremembe**: Moderator (izvoljen prek liquid delegacije) odda tx: "Dodaj lok #123 → #456 z utežjo 0.7".
+2. **Meta-glasovanje**: Ad-hoc forum (samo uporabniki z utežjo >0.5) glasuje v 48 urah.
+3. **Potrditev**: Če >60 % podpore, se graf posodobi v blockchainu (smart contract doda rob).
+4. **Vizualizacija**: V app-u prikaži graf z D3.js (interaktiven zoom, iskanje poti).
 
-To je podobno delegated voting v DAOs, kjer delegacija vpliva na voting power.
-
-## **III. PROCES ODLOČANJA (KOT ZBIRANJE TRANSAKCIJ V BTC)**
-
-Proces je analogen Bitcoinu: Glasovi so transakcije (tx), zbirajo se v mempoolu, potrdijo v bloku.
-
-1. **Predlog (Proposal Tx)**: Kdorkoli odda predlog (npr. "Ali naj uvedemo novo pravilo?"). Tx vsebuje: opis, opcije (da/ne/več), rok glasovanja.
-   
-2. **Delegacija (Delegation Tx)**: Uporabnik odda tx za delegacijo (specifično/splošno). Tx je signiran in broadcastan.
-
-3. **Glasovanje (Vote Tx)**: Vsak odda tx z glasom (da/ne/abstain). Teža se izračuna dinamično (vključno delegacije).
-   - Samo en glas na osebo – ponovni glas prekliče prejšnjega.
-   - Tx fee: Minimalen, za preprečevanje spam (kot gas v ETH).
-
-4. **Zbiranje Tx**: Vozlišča zbirajo tx v mempoolu do roka.
-
-5. **Potrditev (Mining/Validation)**: Validatorji (izbrani prek PoS z utežmi) potrdijo blok. Blok je "list" z:
-   - **Tipiziranim izidom**: npr. {"izid": "DA", "procent": 62.3%}.
-   - **Sklepom**: Avtomatičen povzetek (npr. "Sprejeto: Novo pravilo velja.").
-   - **Datumom**: Timestamp + block height.
-   - **Statistiko**: Število sodelujočih, uteži, delegacije, min/max utež.
-
-> **Konsenz mehanizem**: Liquid PoS – validatorji stakingajo z delegiranimi utežmi. Če delegiraš, tvoja utež pomaga validatorju validirati bloke.
-
-## **IV. MATRIKA UTEŽI GLASOV (DINAMIČNA)**
-
-Podobno prejšnji matriki, a prilagojeno blockchainu.
-
-| Dimenzija | Formula | Spreminjanje |
-|-----------|---------|--------------|
-| **Osnovna teža** | 1 (začetna) | Nespremenljiva. |
-| **Zaupanje (Z)** | Število zaupanja glasov / 10 | +1 za vsak "zaupam ti" tx (max 10). |
-| **Delegacija (D)** | Vsota delegiranih uteži | Dinamično: Delegacija tx doda, revokacija odšteje. |
-| **Aktivnost (A)** | 1 - (dnevi neaktivnosti / 365) | Pada, če ne glasuješ. |
-| **Končna utež (U)** | U = 1 + Z + D + A | Izračunana ob potrditvi bloka. |
-
-> **Primer v kodeksu (Solidity psevdo-koda):**
+> **Pseudokoda za graf (v Solidity + NetworkX za off-chain simulacijo):**
 ```solidity
-contract LiquidVote {
-    mapping(address => uint) public weight;  // Osnovna + zaupanje
-    mapping(address => mapping(uint => address)) public delegations;  // proposalId => delegate
-    event VoteCast(address voter, uint proposalId, bool vote, uint effectiveWeight);
-
-    function castVote(uint proposalId, bool vote) public {
-        uint effWeight = calculateWeight(msg.sender, proposalId);
-        // Oddaj tx z utežjo
-        emit VoteCast(msg.sender, proposalId, vote, effWeight);
+contract DecisionGraph {
+    struct Node { uint id; string conclusion; uint weight; uint timestamp; }
+    struct Edge { uint from; uint to; uint weight; }  // Utež 0-1000 (scaled)
+    
+    mapping(uint => Node) public nodes;
+    mapping(uint => Edge[]) public edges;  // Multi-edges possible
+    
+    function addEdge(uint from, uint to, uint w) public onlyModerator {
+        // Meta-vote required before call
+        edges[from].push(Edge(from, to, w));
     }
-
-    function calculateWeight(address user, uint proposalId) internal view returns (uint) {
-        uint base = 1 + trust[user];  // Zaupanje
-        uint del = getDelegated(user, proposalId);  // Delegacije
-        uint act = 1 - (block.timestamp - lastActive[user]) / (365 days);
-        return base + del + act;
+    
+    function getPriority(uint nodeId) public view returns (uint) {
+        // Simplified PageRank
+        uint pagerank = calculatePageRank(nodeId);
+        return (nodes[nodeId].weight * 400 + pagerank * 300 + freshness() * 300) / 1000;
     }
 }
 ```
 
-## **V. VARNOST IN SKALABILNOST**
+**Off-chain (v app-u, Python z NetworkX za lokalno simulacijo):**
+```python
+import networkx as nx
 
-- **Sybil Attack**: Proof-of-personhood + staking kazni za zlorabo.
-- **51% Attack**: Liquid PoS z delegacijo razprši moč (podobno Tezos).
-- **Anonimnost**: Zero-knowledge votes za zasebnost, a transparentne uteži.
-- **Skalabilnost**: L2 rešitve (npr. rollups) za tisoče tx/sekundo.
-- **Governance**: Sistem sam glasuje o nadgradnjah (meta-glasovanje).
+G = nx.DiGraph()
+G.add_node(123, weight=0.85, conclusion="Uvedba valute")
+G.add_edge(123, 456, weight=0.7)
 
-## **VI. IMPLEMENTACIJA IN TRANZICIJA**
+# Prioritizacija
+priorities = nx.pagerank(G, alpha=0.85)  # PageRank za uteži
+print(priorities[123])  # Izpis: ~0.6
+```
 
-1. **Razvoj**: Začni z testnetom na Ethereum Sepolia.
-2. **Launch**: Airdrop začetnih identitet prek app.
-3. **Integracija**: Poveži z obstoječimi DAOs (npr. Aragon za UI).
-4. **Tranzicija**: Vzporedno z obstoječimi sistemi – uporabniki migrirajo, ko vidijo koristi (brez centralne korupcije).
+---
 
-> **Zaključek**: Ta DApp pretvori korupcijo v zaupanje. Glas ni več fiat – je delegiran in utežen po resnični vrednosti skupnosti.  
-*(temelji na Cosmos SDK za custom chain.)*
+## **II. POZABI NA ANONIMNOST: VERIFICIRANA IDENTITETA PREK E-ID**
+
+- **Brez anonimnosti**: Vsak uporabnik je vezan na realno identiteto (iz CRP/eID). Glasovi so javni (kot v blockchainu), a osebni podatki šifrirani (samo hash ID na verigi).
+- **Prednosti**: Prepreči Sybil napade; poveča zaupanje (utež temelji na resnični participaciji).
+- **Tveganja**: Zasebnost – rešeno z GDPR skladnostjo (uporabnik lahko izbriše podatke po 5 letih neaktivnosti).
+
+---
+
+## **III. INTEGRACIJA Z REGISTROM OSEB REPUBLIKE SLOVENIJE (CRP)**
+
+CRP (Centralni register prebivalstva) je osrednja baza osebnih podatkov v RS, ki vključuje ime, priimek, EMŠO, stalno prebivališče itd. Integracija je **možna, a regulirana** (Zakon o varstvu osebnih podatkov, GDPR).
+
+| Možnost integracije | Opis | Tehnična izvedba | Omejitve |
+|---------------------|------|------------------|----------|
+| **Prek eID avtentikacije** | Uporabnik potrdi identiteto z e-izkaznico; app pridobi osnovne podatke iz CRP prek SI-PASS (slovenski eID sistem). | NFC branje + API klic na eVŠ (elektronsko verifikacijo). | Potrebna odobritev MJU (Ministrstvo za javno upravo); samo za verificirane app-e. |
+| **Direktna API povezava** | Povezava z CRP portala za lokalne skupnosti ali informacijske sisteme. | ASCII/REST API (npr. prek eUprave); primer: integracija z Registrom prostorskih enot. | Za zasebne app-e: Registracija kot "uporabnik" prek portala gov.si; omejeno na osnovne podatke (brez občutljivih). |
+| **Portal CRP** | Pridobitev prek spletnega portala ali mobilne app-e. | OAuth2 + eID; podatki: ime, priimek, kraj (stalno prebivališče). | Brezplačno za javne namene; audit logi za vsako poizvedbo. |
+
+> **Primer toka**: Uporabnik se registrira v dApp-u → NFC potrditev → API klic: `GET /crp/verify?emso_hash=XYZ` → vrne `{ "ime": "Janez", "priimek": "Novak", "kraj": "Ljubljana" }`.
+
+**Zaključek integracije**: Da, možno – začni z zahtevo za dostop prek [gov.si](https://www.gov.si). Za testiranje uporabi sandbox okolje eUprave.
+
+---
+
+## **IV. NFC UVOZ OSEBNIH PODATKOV PREK DIGITALNE OSEBNE IZKAZNICE**
+
+**Da, aplikacija na smartphone lahko uvozi ime, priimek in kraj (stalno prebivališče), če oseba potrdi prek NFC z e-izkaznico.** Slovenija je uvedla **NFC-omogočeno e-izkaznico** (od 2022), ki podpira kontaktless branje na Android/iOS napravah z NFC (večina modelov od 2015 naprej).
+
+### **Tehnične možnosti**
+| Platforma | Podpora NFC | Primer app-e | Kaj se uvozi |
+|-----------|-------------|--------------|--------------|
+| **Android** | Nativa (NFC API v Android SDK) | eOsebna app (uradna); ReadID Me (za test). | Ime, priimek, EMŠO hash, stalno prebivališče (kraj). |
+| **iOS** | Od iOS 13+ (Core NFC framework). | NFC Card Reader app; eOsebna (iOS različica). | Enako kot Android; omejeno na "passive" branje (brez pisanja). |
+
+**Proces uvoza v dApp-u**:
+1. **Namestitev**: Uporabnik odpre app, izbere "Verificiraj z eID".
+2. **NFC aktivacija**: App zahteva dovoljenje za NFC (sistemsko potrdilo).
+3. **Brezkontaktno branje**: Oseba približa e-izkaznico hrbtni strani telefona (5–10 cm).
+4. **Potrditev**: Oseba v app-u potrdi (PIN ali biometrija prek e-izkaznice).
+5. **Uvoz**: App bere podatke iz čipa (ICAO standard): `{ "ime": "Janez", "priimek": "Novak", "kraj": "Ljubljana" }` → shrani hash v wallet za dApp.
+6. **Integracija z CRP**: Po branju se avtomatično verificira prek API-ja (npr. SI-PASS).
+
+> **Pseudokoda za Android (Kotlin):**
+```kotlin
+import android.nfc.NfcAdapter
+import android.nfc.tech.IsoDep  // Za eID čip
+
+class EIDReader {
+    fun readEID(nfcAdapter: NfcAdapter): Map<String, String>? {
+        // NFC intent filter v Manifestu
+        val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
+        val isoDep = IsoDep.get(tag)
+        isoDep.connect()
+        
+        // APDU ukazi za branje eID (po ICAO spec)
+        val response = isoDep.transceive(buildSelectCommand())  // Select EF.DG1 (osebni podatki)
+        
+        // Parsiraj MRZ/osebne podatke
+        return parsePersonalData(response)  // Vrni ime, priimek, kraj
+    }
+}
+```
+
+**Omejitve**:
+- **Varnost**: Podatki so šifrirani na čipu; app bere le z dovoljenjem.
+- **Kompatibilnost**: 100 % na Android 5+ z NFC; iOS 13+ (brez jailbreaka).
+- **Pravne**: GDPR – uporabnik mora soglašati; logi branj shranjeni.
+
+**Zaključek NFC**: Popolnoma izvedljivo – uporabi knjižnice kot OpenSC ali uradni SI-TRUST SDK za eID.
+
+---
+
+## **V. CELOTNA TRANZICIJA IN IMPLEMENTACIJA**
+
+- **Smartphone app**: React Native za cross-platform (Android/iOS), z Web3.js za blockchain.
+- **Testiranje**: Začni z lokalnim CRP sandboxom in NFC simulatorjem (npr. ACS NFC Reader).
+- **Naslednji korak**: Dodaj graf v smart contract – če želiš, generiram polno kodo za GitHub repo.
+
+> **Graf odločitev ni labirint – je zemljevid, ki ga skupnost riše sama.**
+
+*(Ideja za repo: `liquid-vote-dapp/graph-v1.1` – dodaj NetworkX za prototip grafa.)*

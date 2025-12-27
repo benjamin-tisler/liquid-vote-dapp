@@ -1,14 +1,14 @@
-# **RAZŠIRJENA ZASNOVA LIQUID-VOTE-DAPP: GRAF ODLČITEV IN INTEGRACIJA Z RS REGISTROM**
+# **RAZŠIRJENA ZASNOVA LIQUID-VOTE-DAPP: GRAF ODLOČITEV IN INTEGRACIJA Z RS REGISTROM**
 
-> **"Odločitve niso statične artefakte – so živi graf, ki ga skupnost dinamično ureja."**
+> **"Odločitve niso statični artefakti – so živi graf, ki ga skupnost dinamično ureja."**
 
-Hvala za razširitev ideje! V tej zasnovi **pozabimo na anonimnost** (vse identitete so verificirane prek eID), dodamo **usmerjeni graf sprejetih odločitev** z utežmi/prioritetami, ki ga urejajo **kompetentni/izvoljeni moderatorji** prek **preurejevalnih odločitev** (meta-glasovanj). Prav tako preverim **integracijo z Centralnim registrom prebivalstva (CRP) RS** in **NFC uvoz osebnih podatkov** prek digitalne osebne izkaznice (e-izkaznice). Zasnovano je za **smartphone app** (Android/iOS), ki deluje kot distribuirani klient.
+Hvala za razširitev ideje! V tej zasnovi **pozabimo na anonimnost** (vse identitete so verificirane prek eID), dodamo **usmerjeni graf sprejetih odločitev** z utežmi/prioritetami, ki ga urejajo **kompetentni/izvoljeni moderatorji** prek **preurejevalnih odločitev** (meta-glasovanj). Prav tako preverim **integracijo s Centralnim registrom prebivalstva (CRP) RS** in **NFC uvoz osebnih podatkov** prek digitalne osebne izkaznice (e-izkaznice). Zasnovano je za **smartphone app** (Android/iOS), ki deluje kot distribuirani klient.
 
 Integracija temelji na realnih možnostih: Slovenija podpira **NFC branje e-izkaznice** za avtentikacijo in pridobivanje osnovnih podatkov (ime, priimek, stalno prebivališče), zlasti prek uradnih app-ov kot eOsebna. CRP omogoča **povezave prek API-jev ali informacijskih sistemov**, a zahteva odobritev (npr. prek eID avtentikacije).
 
 ---
 
-## **I. RAZŠIRITEV: USMERJEN GRAF SPREJETIH ODLČITEV**
+## **I. RAZŠIRITEV: USMERJEN GRAF SPREJETIH ODLOČITEV**
 
 Sprejete odločitve niso ločene – tvorijo **usmerjeni graf (directed graph)**, kjer:
 - **Povezave** kažejo odvisnosti (npr. "Odločitev A vpliva na B" → lok A → B).
@@ -16,12 +16,12 @@ Sprejete odločitve niso ločene – tvorijo **usmerjeni graf (directed graph)**
 - **Urejanje grafa**: Ne vsakdo – samo **kompetentni/izvoljeni moderatorji** (izbrani prek ad-hoc glasovanj v dApp-u). Spremembe (dodajanje/izbrišitev povezav, sprememba uteži) so **preurejevalne odločitve** (meta-predlogi), ki jih forum potrdi.
 
 ### **Struktura grafa**
-- **Vozlišča**: Vsaka sprejeta odločitev (iz "lista" v blockchainu) kot node z atributi:
+- **Vozlišča**: Vsaka sprejeta odločitev (iz "lista" v verigi/blockchainu) kot node z atributi:
   - ID (block height),
   - Izhod (sklep),
   - Datum,
   - Statistične (utež glasovanja, % sodelujočih).
-- **Robi**: Usmerjeni lokovi z utežmi (0–1, kjer 1 = močna odvisnost).
+- **Robi**: Usmerjeni loki z utežmi (0–1, kjer 1 = močna odvisnost).
 - **Utež vozlišča**: `W = (utež glasovanja × 0.4) + (število citiranj × 0.3) + (časovna svežina × 0.3)`.
 
 | Element grafa | Opis | Primer |
@@ -33,7 +33,7 @@ Sprejete odločitve niso ločene – tvorijo **usmerjeni graf (directed graph)**
 
 ### **Proces urejanja grafa**
 1. **Predlog spremembe**: Moderator (izvoljen prek liquid delegacije) odda tx: "Dodaj lok #123 → #456 z utežjo 0.7".
-2. **Meta-glasovanje**: Ad-hoc forum (samo uporabniki z utežjo >0.5) glasuje v 48 urah.
+2. **Meta-glasovanje**: Ad-hoc forum (samo uporabniki z utežjo >0.5) glasujejo v 48 urah.
 3. **Potrditev**: Če >60 % podpore, se graf posodobi v blockchainu (smart contract doda rob).
 4. **Vizualizacija**: V app-u prikaži graf z D3.js (interaktiven zoom, iskanje poti).
 
